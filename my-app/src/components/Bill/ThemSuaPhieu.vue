@@ -45,8 +45,33 @@
               </v-col>
             </v-row>
             <v-row v-show="hien">
-              <v-col cols="12" class="py-0 px-1 pt-5">
-                <h3>Danh sách sản phẩm</h3>
+              <v-col cols="6" class="py-0 px-1 pt-7 pb-3">
+                              <h3>Danh sách sản phẩm</h3>
+              </v-col>
+
+              <v-col cols="6" class="py-0 px-1 pt-5 pb-3">
+                                <v-spacer></v-spacer>
+
+                <v-btn
+                  color="orange lighten-2"
+                  style="float: right"
+                  fab
+                  dark
+                  small
+                  @click="reload()"
+                >
+                  <v-icon small class="px-0">autorenew</v-icon>
+                </v-btn>
+                <v-btn
+                  color="orange lighten-2"
+                  style="float: right; margin-right: 5px"
+                  fab
+                  dark
+                  small
+                  @click="saveBillBillDetail()"
+                >
+                  <v-icon small class="px-0">{{isUpdateChiTiet == false ? 'add' :'save'}}</v-icon>
+                </v-btn>
               </v-col>
             </v-row>
             <v-row v-show="hien">
@@ -74,7 +99,7 @@
                   data-vv-name="Số lượng"
                 ></v-text-field>
               </v-col>
-              <v-col cols="3" class="px-1 py-0">
+              <v-col cols="2" class="px-1 py-0">
                 <v-text-field
                   v-model.number="billDetail.Price"
                   label="Đơn giá"
@@ -85,27 +110,25 @@
                   data-vv-name="Đơn giá"
                 ></v-text-field>
               </v-col>
-              <v-col cols="3" class="pt-5">
-                <v-btn
-                  color="orange lighten-2"
-                  style="float: right"
-                  fab
-                  dark
-                  small
-                  @click="reload()"
-                >
-                  <v-icon small class="px-0">autorenew</v-icon>
-                </v-btn>
-                <v-btn
-                  color="orange lighten-2"
-                  style="float: right; margin-right: 5px"
-                  fab
-                  dark
-                  small
-                  @click="saveBillBillDetail()"
-                >
-                  <v-icon small class="px-0">{{isUpdateChiTiet == false ? 'add' :'save'}}</v-icon>
-                </v-btn>
+              <v-col cols="2" class="px-1 py-0">
+                <v-autocomplete
+                  v-model="billDetail.BillId"
+                  :items="dsWeather"
+                  item-text="WeatherName"
+                  item-value="WeatherId"
+                  label="Thời tiết" 
+                ></v-autocomplete>
+              </v-col>
+              <v-col cols="2" class="px-1 py-0">
+                <v-text-field
+                  v-model.number="billDetail.Price"
+                  label="Nhiệt độ"
+                  type="number"
+                  :error-messages="errors.collect('Nhiệt độ', 'formBillDetail')"
+                  v-validate="'required|numeric'"
+                  data-vv-scope="formBillDetail"
+                  data-vv-name="Nhiệt độ"
+                ></v-text-field>
               </v-col>
             </v-row>
             <v-row>
@@ -226,6 +249,12 @@ export default Vue.extend({
           AmountBuyWeek: 806,
           AmountSellWeek: 800
         }
+      ],
+      dsWeather: [
+        { WeatherId: 1, WeatherName: 'Nắng' },
+        { WeatherId: 2, WeatherName: 'Mưa' },
+        { WeatherId: 3, WeatherName: 'Bão' },
+        { WeatherId: 4, WeatherName: 'Mây' },
       ]
     };
   },
