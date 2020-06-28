@@ -5,14 +5,7 @@
       <v-flex xs3 style="margin-top: -16px">
         <v-datepicker v-model="searchParamsThongKeNgay.ngay" @input="thongKeNgay()" hide-details></v-datepicker>
       </v-flex>
-      <v-spacer></v-spacer>
-      <div style="display: inline-flex;
-    padding: 10px 20px;
-    background-color: #1976d2;
-    color: white;
-    border-radius: 60px;">
-        <h3>Nắng</h3> &emsp; <h3>31 độ</h3>
-      </div>
+      
       </v-layout>
     <v-layout row wrap class="ma-3">
       

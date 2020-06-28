@@ -11,7 +11,10 @@
       <v-card-text>
         <v-form scope="frmAddEdit">
           <v-row>
-            <v-col cols="12">
+            <v-col cols="4">
+              <v-img :src="product.Thumbnail" style="padding-top: 20px"></v-img>
+            </v-col>
+            <v-col cols="8">
               <v-text-field
                 v-model="product.ProductName"
                 label="Tên sản phẩm *"
@@ -49,7 +52,9 @@ export default Vue.extend({
     return {
       isShow: false,
       isUpdate: false,
-      product: {} as Product,
+      product: {
+        Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image003_20.jpg",
+      } as Product,
       loading: false,
       loadingSave: false,
       active: [] as any[],

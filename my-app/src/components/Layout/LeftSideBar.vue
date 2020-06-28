@@ -19,7 +19,7 @@
         <v-list id="leftSideBar">
             <vue-perfect-scrollbar class="drawer-menu--scroll" :settings="scrollSettings">
                 <v-list dense expand>
-                    <template v-if="dsMenu.length != 0" v-for="(item, i) in dsMenu">
+                    <template v-for="(item, i) in dsMenu">
                         <!--group with subitems-->
                         <v-list-group v-if="item.items && item.show" :key="item.name" :group="item.group" :prepend-icon="item.icon"  v-model="item.active" no-action="no-action">
                             <v-list-item slot="activator" ripple="ripple" v-if="item.link">

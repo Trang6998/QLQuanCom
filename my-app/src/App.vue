@@ -10,6 +10,10 @@
             <v-app-bar-nav-icon @click.stop="updateDrawer"></v-app-bar-nav-icon>
             <v-toolbar-title v-text="title"></v-toolbar-title>
             <v-spacer></v-spacer>
+            <div style="display: contents">
+                <img src="../public/static/img/sunny.svg" style="width: 50px"/>
+                <h3>31°C</h3>
+            </div>
             <v-menu offset-y>
                 <template v-slot:activator="{ on }">
                     <v-btn icon large v-on="on" dark>

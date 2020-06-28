@@ -42,6 +42,9 @@
                   <tr v-for="(item, index) in lstProduct" :key="index">
                     <td class="text-center">{{ index + 1 }}</td>
                     <td class="text-center">
+                        <v-img :src="item.Thumbnail" width="35" height="35" style="margin: 5px auto"></v-img>
+                    </td>
+                    <td class="text-center">
                       <v-tooltip bottom color="info" z-index="990">
                         <template v-slot:activator="{ on, attrs }">
                           <span v-bind="attrs" v-on="on">{{item.ProductName}}</span>
@@ -130,6 +133,12 @@ export default Vue.extend({
       tableHeader: [
         { text: "#", value: "no", sortable: false, align: "center" },
         {
+          text: "Ảnh đại diện",
+          value: "ProductName",
+          sortable: false,
+          align: "center"
+        },
+        {
           text: "Tên sản phẩm",
           value: "ProductName",
           sortable: false,
@@ -157,6 +166,7 @@ export default Vue.extend({
         {
           ProductId: 1,
           ProductName: "Sản phẩm 1",
+          Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image003_20.jpg",
           AmountBuyDay: 159,
           AmountSellDay: 130,
           AmountBuyWeek: 896,
@@ -216,6 +226,7 @@ export default Vue.extend({
         {
           ProductId: 2,
           ProductName: "Sản phẩm 2",
+          Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image005_13.jpg",
           AmountBuyDay: 135,
           AmountSellDay: 120,
           AmountBuyWeek: 796,
@@ -275,6 +286,7 @@ export default Vue.extend({
         {
           ProductId: 3,
           ProductName: "Sản phẩm 3",
+          Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image007_5.jpg",
           AmountBuyDay: 159,
           AmountSellDay: 130,
           AmountBuyWeek: 896,
@@ -334,6 +346,7 @@ export default Vue.extend({
         {
           ProductId: 4,
           ProductName: "Sản phẩm 4",
+          Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image011_3.jpg",
           AmountBuyDay: 163,
           AmountSellDay: 150,
           AmountBuyWeek: 806,
