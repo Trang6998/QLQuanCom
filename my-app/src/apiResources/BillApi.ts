@@ -2,15 +2,19 @@
 
 import { HTTP } from '@/HTTPServices';
 import { BaseApi } from '@/apiResources/BaseApi';
-import { Product } from '@/models/Product';
+import { Bill } from '@/models/Bill';
 import { Pagination } from './PaginatedResponse';
-export interface ProductApiSearchParams extends Pagination {
-    keywords?: string
+export interface BillApiSearchParams extends Pagination {
+    DatetimeStart: Date,
+    DatetimeEnd: Date,
+    TotalMoneyStart: number,
+    TotalMoneyEnd: number,
+    Type: number
 }
-class ProductApi extends BaseApi {
-    search(): Promise<Product[]> {
-        return new Promise<Product[]>((resolve: any, reject: any) => {
-            HTTP.get(`api/v1/products`, { params: {} })
+class BillApi extends BaseApi {
+    search(search: BillApiSearchParams): Promise<Bill[]> {
+        return new Promise<Bill[]>((resolve: any, reject: any) => {
+            HTTP.get(`api/v1/bills/search`, { params: search })
             .then((response) => {
                 resolve(response.data);
             }).catch((error) => {
@@ -18,9 +22,9 @@ class ProductApi extends BaseApi {
             })
         });
     }
-    insert(product: Product): Promise<Product> {
-        return new Promise<Product>((resolve: any, reject: any) => {
-            HTTP.post(`api/v1/products`,product)
+    insert(bill: Bill): Promise<Bill> {
+        return new Promise<Bill>((resolve: any, reject: any) => {
+            HTTP.post(`api/v1/bills`,bill)
             .then((response) => {
                 resolve(response.data);
             }).catch((error) => {
@@ -28,9 +32,9 @@ class ProductApi extends BaseApi {
             })
         });
     }
-    update(productId: number, product: Product): Promise<Product> {
-        return new Promise<Product>((resolve: any, reject: any) => {
-            HTTP.put(`api/v1/products/${productId}`, product)
+    update(billId: number, bill: Bill): Promise<Bill> {
+        return new Promise<Bill>((resolve: any, reject: any) => {
+            HTTP.put(`api/v1/bills/${billId}`, bill)
                 .then((response) => {
                     resolve(response.data);
                 }).catch((error) => {
@@ -38,9 +42,9 @@ class ProductApi extends BaseApi {
                 })
         });
     }
-    delete(productId: number): Promise<any> {
+    delete(billId: number): Promise<any> {
         return new Promise<any>((resolve: any, reject: any) => {
-            HTTP.delete(`api/v1/products/${productId}`)
+            HTTP.delete(`api/v1/bills/${billId}`)
                 .then((response) => {
                     resolve(response.data);
                 }).catch((error) => {
@@ -48,9 +52,9 @@ class ProductApi extends BaseApi {
                 })
         });
     }
-    get(productId: number): Promise<any> {
+    get(billId: number): Promise<any> {
         return new Promise<any>((resolve: any, reject: any) => {
-            HTTP.get(`api/v1/products/${productId}`)
+            HTTP.get(`api/v1/bills/${billId}`)
                 .then((response) => {
                     resolve(response.data);
                 }).catch((error) => {
@@ -59,4 +63,4 @@ class ProductApi extends BaseApi {
         });
     }
 }
-export default new ProductApi();
+export default new BillApi();

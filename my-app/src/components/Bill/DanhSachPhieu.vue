@@ -6,7 +6,7 @@
         <v-row>
           <v-col cols="3">
             <v-datepicker
-              v-model="searchParamsBill.fromdate"
+              v-model="searchParamsBill.DatetimeStart"
               @input="getDataFromApi(searchParamsBill)"
               hide-details
               label="Từ ngày"
@@ -15,7 +15,7 @@
           </v-col>
           <v-col cols="3">
             <v-datepicker
-              v-model="searchParamsBill.todate"
+              v-model="searchParamsBill.DatetimeEnd"
               @input="getDataFromApi(searchParamsBill)"
               hide-details
               label="Đến ngày"
@@ -24,7 +24,7 @@
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="searchParamsBill.frommoney"
+              v-model="searchParamsBill.TotalMoneyStart"
               @input="getDataFromApi(searchParamsBill)"
               hide-details
               type="number"
@@ -33,7 +33,7 @@
           </v-col>
           <v-col cols="3">
             <v-text-field
-              v-model="searchParamsBill.tomoney"
+              v-model="searchParamsBill.TotalMoneyEnd"
               @input="getDataFromApi(searchParamsBill)"
               hide-details
               type="number"
@@ -57,34 +57,32 @@
               :items="lstBill"
               :loading="loadingTable"
               class="elevation-1"
+              :search="search"
+              :items-per-page="5"
             >
               <v-progress-linear height="2" slot="progress" color="blue" indeterminate></v-progress-linear>
-              <template v-slot:body>
-                <tbody>
-                  <tr v-for="(item, index) in lstBill" :key="index">
-                    <td class="text-center">{{ index + 1 }}</td>
-                    <td class="text-center">{{ item.Datetime | moment('DD/MM/YYYY') }}</td>
-                    <td class="text-center">{{ item.TotalMoney }}</td>
-                    <td class="text-center">{{ item.Description }}</td>
-                    <td>
-                      <v-layout nowrap style="place-content: center">
-                        <v-btn text icon small @click="showModalThemSua(true, item)" class="ma-0">
-                          <v-icon small>edit</v-icon>
-                        </v-btn>
-                        <v-btn
-                          text
-                          icon
-                          small
-                          color="red"
-                          class="ma-0"
-                          @click="confirmDelete(item)"
-                        >
-                          <v-icon small>delete</v-icon>
-                        </v-btn>
-                      </v-layout>
-                    </td>
-                  </tr>
-                </tbody>
+              <template v-slot:item.no="{ item }">
+                {{ lstBill.indexOf(item) + 1 }}
+              </template>
+              <template v-slot:item.Datetime="{ item }">
+                {{ item.Datetime | moment('DD/MM/YYYY hh:mm:ss A') }}
+              </template>
+              <template v-slot:item.actions="{ item }">
+                <v-layout nowrap style="place-content: center">
+                  <v-btn text icon small @click="showModalThemSua(true, item)" class="ma-0">
+                    <v-icon small>edit</v-icon>
+                  </v-btn>
+                  <v-btn
+                    text
+                    icon
+                    small
+                    color="red"
+                    class="ma-0"
+                    @click="confirmDelete(item)"
+                  >
+                    <v-icon small>delete</v-icon>
+                  </v-btn>
+                </v-layout>
               </template>
             </v-data-table>
           </v-col>
@@ -107,7 +105,7 @@
 </template>
 <script lang="ts">
 import { Vue } from "vue-property-decorator";
-// import BillApi from '@/apiResources/BillApi';
+import BillApi, {BillApiSearchParams} from '@/apiResources/BillApi';
 import { Bill } from "@/models/Bill";
 import ThemSuaPhieu from "./ThemSuaPhieu.vue";
 import { type } from "os";
@@ -118,72 +116,75 @@ export default Vue.extend({
   },
   data() {
     return {
-      dsBill: [] as Bill[],
+      search: '',
       tableHeader: [
         { text: "#", value: "no", sortable: false, align: "center" },
         {
           text: "Ngày tháng",
-          value: "BillName",
+          value: "Datetime",
           sortable: false,
           align: "center"
         },
         {
           text: "Tổng tiền",
           sortable: false,
-          value: "Total",
+          value: "TotalMoney",
           align: "center"
         },
-        { text: "Ghi chú", sortable: false, value: "Total", align: "center" },
+        { text: "Ghi chú", sortable: false, value: "Description", align: "center" },
         { text: "Thao tác", value: "actions", sortable: false, align: "center" }
       ],
-      searchParamsBill: {} as any,
+      searchParamsBill: {} as BillApiSearchParams,
       loadingTable: false,
       selectedBill: {} as Bill,
       dialogConfirmDelete: false,
-      lstBill: [
-        {
-          BillId: 1,
-          Datetime: "01/06/2020",
-          TotalMoney: 1500000,
-          Description: "Nhập dư"
-        },
-        {
-          BillId: 2,
-          Datetime: "02/06/2020",
-          TotalMoney: 1950000,
-          Description: "Hàng nhập lỗi "
-        },
-        {
-          BillId: 3,
-          Datetime: "03/06/2020",
-          TotalMoney: 1700000,
-          Description: "Hàng đến muộn"
-        },
-        {
-          BillId: 4,
-          Datetime: "04/06/2020",
-          TotalMoney: 2500000,
-          Description: "Hàng tươi ngon"
-        }
-      ],
+      lstBill: [] as Bill[],
       type: null as any
     };
   },
-  created() {},
-  watch: {},
-  beforeRouteUpdate(to, from, next) {
-    if (to.params.type == "import") this.type = 0;
-    else this.type = 1;
-    next();
+  watch: {
+    '$route': function (to, from) {
+        if (to.params.type == "import") {
+          this.type = 0;
+          this.searchParamsBill.Type = 0;
+        }
+        else {
+          this.type = 1;
+          this.searchParamsBill.Type = 1;
+        }
+        this.getDataFromApi(this.searchParamsBill)
+      }
+  },
+  // beforeRouteUpdate(to, from, next) {
+  //   if (to.params.type == "import") {
+  //     this.type = 0;
+  //     this.searchParamsBill.Type = 0;
+  //   }
+  //   else {
+  //     this.type = 1;
+  //     this.searchParamsBill.Type = 1;
+  //   }
+  //   next();
+  // },
+  created() {
+    if (this.$route.params.type == "import") {
+      this.type = 0;
+      this.searchParamsBill.Type = 0;
+    }
+    else {
+      this.type = 1;
+      this.searchParamsBill.Type = 1;
+    }
+    this.getDataFromApi(this.searchParamsBill)
   },
   methods: {
-    getDataFromApi(searchParamsBill: any): void {
+    getDataFromApi(searchParamsBill: BillApiSearchParams): void {
       this.loadingTable = true;
-      //BillApi.search().then(res => {
-      // this.dsBill = res.Data;
-      // this.searchParamsBill.totalItems = res.Pagination.totalItems;
-      // this.loadingTable = false;
-      //});
+      BillApi.search(searchParamsBill).then(res => {
+        this.lstBill = (res as any).data;
+        //this.searchParamsBill.totalItems = res.Pagination.totalItems;
+        this.loadingTable = false;
+      });
     },
     showModalThemSua(isUpdate: boolean, item: any) {
       (this.$refs.themSuaPhieu as any).show(isUpdate, item);
@@ -193,13 +194,13 @@ export default Vue.extend({
       this.dialogConfirmDelete = true;
     },
     deleteBill(): void {
-      // BillApi.delete(this.selectedBill.BillId).then(res => {
-      //     this.$snotify.success('Xóa thành công!');
-      //     this.getDataFromApi(this.searchParamsBill);
-      //     this.dialogConfirmDelete = false;
-      // }).catch(res => {
-      //     this.$snotify.error('Xóa thất bại!');
-      // });
+      BillApi.delete(this.selectedBill.BillId).then(res => {
+          this.$snotify.success('Xóa thành công!');
+          this.getDataFromApi(this.searchParamsBill);
+          this.dialogConfirmDelete = false;
+      }).catch(res => {
+          this.$snotify.error('Xóa thất bại!');
+      });
     }
   }
 });

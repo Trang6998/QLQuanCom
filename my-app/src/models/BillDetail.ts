@@ -7,5 +7,6 @@ export interface BillDetail {
     Amount: number;
     Price: number;
     Product: Product;
+    TotalMoney: number;
 }
     

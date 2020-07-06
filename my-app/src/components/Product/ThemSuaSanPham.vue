@@ -73,47 +73,49 @@ export default Vue.extend({
       this.isShow = true;
       this.isUpdate = isUpdate;
       if (isUpdate) {
-        this.productID = item.ProductID;
+        this.productID = item.ProductId;
         this.getDataFromApi(this.productID);
       } else {
-        this.product = {} as Product;
+        this.product = {
+          Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image003_20.jpg",
+        } as Product;
       }
     },
     getDataFromApi(id: number): void {
-      // ProductApi.get(id).then(res => {
-      //   this.product = res;
-      // });
+      ProductApi.get(id).then(res => {
+        this.product = (res as any).data;
+      });
     },
     save(): void {
       this.$validator.validateAll("frmAddEdit").then(res => {
         if (res) {
           if (this.isUpdate) {
             this.loading = true;
-            // ProductApi.update(this.productID, this.product)
-            //   .then(res => {
-            //     this.loading = false;
-            //     this.$emit("save");
-            //     this.isShow = false;
-            //     this.$snotify.success("Cập nhật thành công!");
-            //   })
-            //   .catch(res => {
-            //     this.loading = false;
-            //     this.$snotify.error("Cập nhật thất bại!");
-            //   });
+            ProductApi.update(this.productID, this.product)
+              .then(res => {
+                this.loading = false;
+                this.$emit("save");
+                this.isShow = false;
+                this.$snotify.success("Cập nhật thành công!");
+              })
+              .catch(res => {
+                this.loading = false;
+                this.$snotify.error("Cập nhật thất bại!");
+              });
           } else {
             this.loading = true;
-            // ProductApi.insert(this.product)
-            //   .then(res => {
-            //     this.product = res;
-            //     this.isShow = false;
-            //     this.$emit("save");
-            //     this.loading = false;
-            //     this.$snotify.success("Thêm mới thành công!");
-            //   })
-            //   .catch(res => {
-            //     this.loading = false;
-            //     this.$snotify.error("Thêm mới thất bại!");
-            //   });
+            ProductApi.insert(this.product)
+              .then(res => {
+                this.product = res;
+                this.isShow = false;
+                this.$emit("save");
+                this.loading = false;
+                this.$snotify.success("Thêm mới thành công!");
+              })
+              .catch(res => {
+                this.loading = false;
+                this.$snotify.error("Thêm mới thất bại!");
+              });
           }
         }
       });

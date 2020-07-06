@@ -2,4 +2,5 @@
     BillId: number;
     Type: number;
     Datetime: Date;
+    TotalMoney: number;
 }

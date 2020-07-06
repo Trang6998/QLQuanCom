@@ -6,8 +6,7 @@
         <v-row>
           <v-col cols="6">
             <v-text-field
-              v-model="searchParamsProduct.keyworlds"
-              @input="getDataFromApi(searchParamsProduct)"
+              v-model="search"
               hide-details
               append-icon="search"
               label="Tìm kiếm"
@@ -26,23 +25,79 @@
           </v-col>
         </v-row>
         <v-row>
-          <!-- @update:options="getDataFromApi"
-                    :options.sync="searchParamsProduct"
-          :server-items-length="searchParamsProduct.totalItems"-->
           <v-col cols="12" class="pt-0">
             <v-data-table
               :headers="tableHeader"
               :items="lstProduct"
               :loading="loadingTable"
               class="elevation-1"
+              :search="search"
+              :items-per-page="5"
             >
               <v-progress-linear height="2" slot="progress" color="blue" indeterminate></v-progress-linear>
-              <template v-slot:body>
+              <template v-slot:item.no="{ item }">
+                {{ lstProduct.indexOf(item) + 1 }}
+              </template>
+              <template v-slot:item.Thumbnail="{ item }">
+                <v-img :src="item.Thumbnail" width="35" height="35" style="margin: 5px auto"></v-img>
+              </template>
+              <template v-slot:item.ProductName="{ item }">
+                <v-tooltip bottom color="info" z-index="990">
+                  <template v-slot:activator="{ on, attrs }">
+                    <span v-bind="attrs" v-on="on">{{item.ProductName}}</span>
+                  </template>
+                  <span>
+                    <ul>
+                      <li v-for="(subItem, idx) in item.ProductInfor" :key="idx">
+                        <div
+                          style="white-space: nowrap; display: inline-flex; padding-bottom: 5px"
+                        >
+                          <div
+                            style="width: 150px"
+                          >{{subItem.WeekDay}} ({{subItem.Weather}} - {{subItem.Temperature}} độ):</div>&emsp;
+                          <v-chip small color="green">{{subItem.NumberPurchased}}</v-chip>&emsp;
+                          <v-chip small color="orange">{{subItem.NumberSold}}</v-chip>&emsp;
+                          <v-chip
+                            small
+                            color="red"
+                          >{{subItem.NumberPurchased - subItem.NumberSold}}</v-chip>
+                        </div>
+                      </li>
+                    </ul>
+                  </span>
+                </v-tooltip>              
+              </template>
+              <template v-slot:item.AmountBuySellDay="{ item }">
+                <v-chip small color="green" dark>{{ item.AmountBuyDay }}</v-chip>/
+                <v-chip small color="orange" dark>{{ item.AmountSellDay }}</v-chip>              
+              </template>
+              <template v-slot:item.AmountBuySellWeek="{ item }">
+                <v-chip small color="green" dark>{{ item.AmountBuyWeek }}</v-chip>/
+                <v-chip small color="orange" dark>{{ item.AmountSellWeek }}</v-chip>      
+              </template>
+              <template v-slot:item.actions="{ item }">
+                <v-layout nowrap style="place-content: center">
+                  <v-btn text icon small @click="showModalThemSua(true, item)" class="ma-0">
+                    <v-icon small>edit</v-icon>
+                  </v-btn>
+                  <v-btn
+                    text
+                    icon
+                    small
+                    color="red"
+                    class="ma-0"
+                    @click="confirmDelete(item)"
+                  >
+                    <v-icon small>delete</v-icon>
+                  </v-btn>
+                </v-layout>
+              </template>
+              <!-- <template v-slot:body>
                 <tbody>
                   <tr v-for="(item, index) in lstProduct" :key="index">
                     <td class="text-center">{{ index + 1 }}</td>
                     <td class="text-center">
-                        <v-img :src="item.Thumbnail" width="35" height="35" style="margin: 5px auto"></v-img>
+                      <v-img :src="item.Thumbnail" width="35" height="35" style="margin: 5px auto"></v-img>
                     </td>
                     <td class="text-center">
                       <v-tooltip bottom color="info" z-index="990">
@@ -97,7 +152,7 @@
                     </td>
                   </tr>
                 </tbody>
-              </template>
+              </template> -->
             </v-data-table>
           </v-col>
         </v-row>
@@ -119,7 +174,7 @@
 </template>
 <script lang="ts">
 import { Vue } from "vue-property-decorator";
-import ProductApi from "@/apiResources/ProductApi";
+import ProductApi, { ProductApiSearchParams } from "@/apiResources/ProductApi";
 import { Product } from "@/models/Product";
 import ThemSuaSanPham from "./ThemSuaSanPham.vue";
 
@@ -129,12 +184,13 @@ export default Vue.extend({
   },
   data() {
     return {
-      dsProduct: [] as Product[],
+      search: '',
+      lstProduct: [] as Product[],
       tableHeader: [
         { text: "#", value: "no", sortable: false, align: "center" },
         {
           text: "Ảnh đại diện",
-          value: "ProductName",
+          value: "Thumbnail",
           sortable: false,
           align: "center"
         },
@@ -147,274 +203,34 @@ export default Vue.extend({
         {
           text: "Số lượng mua vào/bán ra trong ngày",
           sortable: false,
-          value: "AmountBuyDay",
+          value: "AmountBuySellDay",
           align: "center"
         },
         {
           text: "Số lượng mua vào/bán ra trong tuần",
           sortable: false,
-          value: "statisticbyweek",
+          value: "AmountBuySellWeek",
           align: "center"
         },
         { text: "Thao tác", value: "actions", sortable: false, align: "center" }
       ],
-      searchParamsProduct: {} as any,
+      searchParamsProduct: { itemsPerPage: 5 } as ProductApiSearchParams,
       loadingTable: false,
       selectedProduct: {} as Product,
-      dialogConfirmDelete: false,
-      lstProduct: [
-        {
-          ProductId: 1,
-          ProductName: "Sản phẩm 1",
-          Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image003_20.jpg",
-          AmountBuyDay: 159,
-          AmountSellDay: 130,
-          AmountBuyWeek: 896,
-          AmountSellWeek: 796,
-          ProductInfor: [
-            {
-              WeekDay: "Thứ 2",
-              Weather: "Nắng",
-              Temperature: "29",
-              NumberPurchased: 30,
-              NumberSold: 25
-            },
-            {
-              WeekDay: "Thứ 3",
-              Weather: "Mưa",
-              Temperature: "28",
-              NumberPurchased: 40,
-              NumberSold: 30
-            },
-            {
-              WeekDay: "Thứ 4",
-              Weather: "Nắng",
-              Temperature: "30",
-              NumberPurchased: 27,
-              NumberSold: 25
-            },
-            {
-              WeekDay: "Thứ 5",
-              Weather: "Mây",
-              Temperature: "27",
-              NumberPurchased: 46,
-              NumberSold: 37
-            },
-            {
-              WeekDay: "Thứ 6",
-              Weather: "Bão",
-              Temperature: "25",
-              NumberPurchased: 45,
-              NumberSold: 39
-            },
-            {
-              WeekDay: "Thứ 7",
-              Weather: "Mưa",
-              Temperature: "26",
-              NumberPurchased: 24,
-              NumberSold: 24
-            },
-            {
-              WeekDay: "Chủ nhật",
-              Weather: "Mưa",
-              Temperature: "29",
-              NumberPurchased: 35,
-              NumberSold: 29
-            }
-          ]
-        },
-        {
-          ProductId: 2,
-          ProductName: "Sản phẩm 2",
-          Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image005_13.jpg",
-          AmountBuyDay: 135,
-          AmountSellDay: 120,
-          AmountBuyWeek: 796,
-          AmountSellWeek: 606,
-          ProductInfor: [
-            {
-              WeekDay: "Thứ 2",
-              Weather: "Nắng",
-              Temperature: "29",
-              NumberPurchased: 30,
-              NumberSold: 25
-            },
-            {
-              WeekDay: "Thứ 3",
-              Weather: "Mưa",
-              Temperature: "28",
-              NumberPurchased: 40,
-              NumberSold: 30
-            },
-            {
-              WeekDay: "Thứ 4",
-              Weather: "Nắng",
-              Temperature: "30",
-              NumberPurchased: 27,
-              NumberSold: 25
-            },
-            {
-              WeekDay: "Thứ 5",
-              Weather: "Mây",
-              Temperature: "27",
-              NumberPurchased: 46,
-              NumberSold: 37
-            },
-            {
-              WeekDay: "Thứ 6",
-              Weather: "Bão",
-              Temperature: "25",
-              NumberPurchased: 45,
-              NumberSold: 39
-            },
-            {
-              WeekDay: "Thứ 7",
-              Weather: "Mưa",
-              Temperature: "26",
-              NumberPurchased: 24,
-              NumberSold: 24
-            },
-            {
-              WeekDay: "Chủ nhật",
-              Weather: "Mưa",
-              Temperature: "29",
-              NumberPurchased: 35,
-              NumberSold: 29
-            }
-          ]
-        },
-        {
-          ProductId: 3,
-          ProductName: "Sản phẩm 3",
-          Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image007_5.jpg",
-          AmountBuyDay: 159,
-          AmountSellDay: 130,
-          AmountBuyWeek: 896,
-          AmountSellWeek: 796,
-          ProductInfor: [
-            {
-              WeekDay: "Thứ 2",
-              Weather: "Nắng",
-              Temperature: "29",
-              NumberPurchased: 30,
-              NumberSold: 25
-            },
-            {
-              WeekDay: "Thứ 3",
-              Weather: "Mưa",
-              Temperature: "28",
-              NumberPurchased: 40,
-              NumberSold: 30
-            },
-            {
-              WeekDay: "Thứ 4",
-              Weather: "Nắng",
-              Temperature: "30",
-              NumberPurchased: 27,
-              NumberSold: 25
-            },
-            {
-              WeekDay: "Thứ 5",
-              Weather: "Mây",
-              Temperature: "27",
-              NumberPurchased: 46,
-              NumberSold: 37
-            },
-            {
-              WeekDay: "Thứ 6",
-              Weather: "Bão",
-              Temperature: "25",
-              NumberPurchased: 45,
-              NumberSold: 39
-            },
-            {
-              WeekDay: "Thứ 7",
-              Weather: "Mưa",
-              Temperature: "26",
-              NumberPurchased: 24,
-              NumberSold: 24
-            },
-            {
-              WeekDay: "Chủ nhật",
-              Weather: "Mưa",
-              Temperature: "29",
-              NumberPurchased: 35,
-              NumberSold: 29
-            }
-          ]
-        },
-        {
-          ProductId: 4,
-          ProductName: "Sản phẩm 4",
-          Thumbnail: "https://znews-photo.zadn.vn/w660/Uploaded/wyhktpu/2018_08_13/image011_3.jpg",
-          AmountBuyDay: 163,
-          AmountSellDay: 150,
-          AmountBuyWeek: 806,
-          AmountSellWeek: 800,
-          ProductInfor: [
-            {
-              WeekDay: "Thứ 2",
-              Weather: "Nắng",
-              Temperature: "29",
-              NumberPurchased: 30,
-              NumberSold: 25
-            },
-            {
-              WeekDay: "Thứ 3",
-              Weather: "Mưa",
-              Temperature: "28",
-              NumberPurchased: 40,
-              NumberSold: 30
-            },
-            {
-              WeekDay: "Thứ 4",
-              Weather: "Nắng",
-              Temperature: "30",
-              NumberPurchased: 27,
-              NumberSold: 25
-            },
-            {
-              WeekDay: "Thứ 5",
-              Weather: "Mây",
-              Temperature: "27",
-              NumberPurchased: 46,
-              NumberSold: 37
-            },
-            {
-              WeekDay: "Thứ 6",
-              Weather: "Bão",
-              Temperature: "25",
-              NumberPurchased: 45,
-              NumberSold: 39
-            },
-            {
-              WeekDay: "Thứ 7",
-              Weather: "Mưa",
-              Temperature: "26",
-              NumberPurchased: 24,
-              NumberSold: 24
-            },
-            {
-              WeekDay: "Chủ nhật",
-              Weather: "Mưa",
-              Temperature: "29",
-              NumberPurchased: 35,
-              NumberSold: 29
-            }
-          ]
-        }
-      ]
+      dialogConfirmDelete: false
     };
   },
   watch: {},
-  created() {},
+  created() {
+    this.getDataFromApi(this.searchParamsProduct);
+  },
   methods: {
-    getDataFromApi(searchParamsProduct: any): void {
+    getDataFromApi(searchParamsProduct: ProductApiSearchParams): void {
       this.loadingTable = true;
       ProductApi.search().then(res => {
-        // this.dsProduct = res.Data;
-        // this.searchParamsProduct.totalItems = res.Pagination.totalItems;
-        // this.loadingTable = false;
+        this.lstProduct = (res as any).data;
+        //this.searchParamsProduct.totalItems = (res as any).data.length;
+        this.loadingTable = false;
       });
     },
     showModalThemSua(isUpdate: boolean, item: any) {

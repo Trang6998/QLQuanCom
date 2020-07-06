@@ -13,14 +13,14 @@
           <v-container class="py-0">
             <v-row>
               <v-col cols="6" class="py-0 px-1">
-                <v-datepicker
+                <v-datetimepicker
                   v-model="bill.Datetime"
                   label="Ngày xuất phiếu"
                   :error-messages="errors.collect('Ngày xuất phiếu', 'frmAddEdit')"
                   v-validate="'required'"
                   data-vv-scope="frmAddEdit"
                   data-vv-name="Ngày xuất phiếu"
-                ></v-datepicker>
+                ></v-datetimepicker>
               </v-col>
               <v-col cols="6" class="py-0 px-1">
                 <v-text-field
@@ -77,7 +77,7 @@
             <v-row v-show="hien">
               <v-col cols="4" class="py-0 px-1">
                 <v-autocomplete
-                  v-model="billDetail.BillId"
+                  v-model="billDetail.ProductId"
                   :items="dsProduct"
                   item-text="ProductName"
                   item-value="ProductId"
@@ -149,12 +149,12 @@
                         @click="selectedRow(item)"
                         style="cursor: pointer"
                       >
-                        <td class="text-center">{{item.Product.ProductName}}</td>
+                        <td class="text-center">{{item.ProductName}}</td>
                         <td class="text-center">{{item.Amount}}</td>
                         <td class="text-center">{{item.Price}}</td>
                         <td class="text-center">{{item.Amount * item.Price}}</td>
                         <td class="text-center">
-                          <v-btn icon small class="mx-0" @click="confirmDelete(props.item)">
+                          <v-btn icon small class="mx-0" @click="confirmDelete(item)">
                             <v-icon small color="red">delete</v-icon>
                           </v-btn>
                         </td>
@@ -178,10 +178,13 @@
 
 <script lang="ts">
 import { Vue } from "vue-property-decorator";
-// import BillApi, { BillApiSearchParams } from '@/apiResources/BillApi';
+import BillApi, { BillApiSearchParams } from '@/apiResources/BillApi';
+import BillDetailApi from '@/apiResources/BillDetailsApi';
 import { Bill } from "@/models/Bill";
 import { BillDetail } from "@/models/BillDetail";
 import APIS from "@/apisServer";
+import ProductApi, { ProductApiSearchParams } from "../../apiResources/ProductApi";
+import { Product } from "../../models/Product";
 
 export default Vue.extend({
   $_veeValidate: {
@@ -216,40 +219,7 @@ export default Vue.extend({
         },
         { text: "Thao tác", value: "thaotac", align: "center", sortable: true }
       ],
-      dsProduct: [
-        {
-          ProductId: 1,
-          ProductName: "Sản phẩm 1",
-          AmountBuyDay: 159,
-          AmountSellDay: 130,
-          AmountBuyWeek: 896,
-          AmountSellWeek: 796
-        },
-        {
-          ProductId: 2,
-          ProductName: "Sản phẩm 2",
-          AmountBuyDay: 135,
-          AmountSellDay: 120,
-          AmountBuyWeek: 796,
-          AmountSellWeek: 606
-        },
-        {
-          ProductId: 3,
-          ProductName: "Sản phẩm 3",
-          AmountBuyDay: 159,
-          AmountSellDay: 130,
-          AmountBuyWeek: 896,
-          AmountSellWeek: 796
-        },
-        {
-          ProductId: 4,
-          ProductName: "Sản phẩm 4",
-          AmountBuyDay: 163,
-          AmountSellDay: 150,
-          AmountBuyWeek: 806,
-          AmountSellWeek: 800
-        }
-      ],
+      dsProduct: [] as Product[],
       dsWeather: [
         { WeatherId: 1, WeatherName: 'Nắng' },
         { WeatherId: 2, WeatherName: 'Mưa' },
@@ -271,113 +241,119 @@ export default Vue.extend({
       this.isShow = true;
       this.dsBillDetail = [] as BillDetail[];
       this.billDetail = {} as BillDetail;
-      this.getDSBillBillDetail();
-      this.getDSBillDetail();
+      this.getDSProduct()
       this.isUpdate = isUpdate;
       if (isUpdate) {
         this.hien = true;
-        this.billID = item.BillID;
+        this.billID = item.BillId;
         this.getDataFromApi(this.billID);
       } else {
         this.hien = false;
-        this.bill = {} as Bill;
+        this.bill = {TotalMoney: 0, Type : 0, Datetime: this.$moment()} as Bill;
       }
     },
-    getDSBillDetail() {
-      // BillDetailApi.search(this.searchParamsBillDetail).then(res => {
-      //     this.dsBillDetail = res.Data
-      // })
+    getDSProduct() {
+      ProductApi.search().then(res => {
+          this.dsProduct = (res as any).data
+      })
     },
-    getDSBillBillDetail(): void {
-      // this.searchParamsBill_BillDetail.billID = this.bill.BillID;
-      // Bill_BillDetailApi.search(this.searchParamsBill_BillDetail).then(res => {
-      //     this.dsBillBillDetail = res.Data;
-      // }).catch(res => {
-      //     this.loading = false;
-      //     this.$snotify.error('Lấy dữ liệu bài hát thất bại!');
-      // });
+    getDSBillDetail(id: number): void {
+      BillDetailApi.search(id).then(res => {
+          this.dsBillDetail = (res as any).data;
+      }).catch(res => {
+          this.loading = false;
+          this.$snotify.error('Lấy dữ liệu chi tiết phiếu thất bại!');
+      });
     },
 
     reload() {
-      // this.isUpdateChiTiet = false;
-      // this.$validator.reset();
-      // this.billDetail = {} as BillDetail;
+      this.isUpdateChiTiet = false;
+      this.$validator.reset();
+      this.billDetail = {} as BillDetail;
     },
-    selectedRow(value: any) {
-      this.billDetail = value;
+    selectedRow(value: BillDetail) {
+      this.billDetail = value;  
       this.isUpdateChiTiet = true;
     },
     saveBillBillDetail(): void {
       this.billDetail.BillId = this.bill.BillId;
       this.$validator.validateAll("formBillBillDetail").then(res => {
         if (res) {
-          // if (this.isUpdateChiTiet) {
-          //     this.loading = true;
-          //     BillDetailApi.update(this.billDetail.BillID, this.billDetail.BillDetailID, this.billDetail).then(res => {
-          //         this.loading = false;
-          //         this.isUpdateChiTiet = false;
-          //         this.$emit("save");
-          //         this.billDetail = {} as Bill_BillDetail;
-          //         this.getDSBillBillDetail();
-          //         this.$snotify.success('Cập nhật thành công!');
-          //     }).catch(res => {
-          //         this.loading = false;
-          //         this.$snotify.error('Cập nhật thất bại!');
-          //     });
-          // } else {
-          //     this.loading = true;
-          //     Bill_BillDetailApi.insert(this.billDetail).then(res => {
-          //         this.billDetail = res;
-          //         this.isUpdateChiTiet = false;
-          //         this.loading = false;
-          //         this.hien = true;
-          //         this.$emit("save");
-          //         this.billDetail = {} as Bill_BillDetail;
-          //         this.getDSBillBillDetail();
-          //         this.$snotify.success('Thêm mới thành công!');
-          //     }).catch(res => {
-          //         this.loading = false;
-          //         this.$snotify.error('Bài hát đã tồn tại trong bill!');
-          //     });
-          // }
+          if (this.isUpdateChiTiet) {
+            this.loading = true;
+            BillDetailApi.update(this.billDetail.BillDetailId, this.billDetail).then(res => {
+                this.loading = false;
+                this.isUpdateChiTiet = false;
+                this.$emit("save");
+                this.billDetail = {} as BillDetail;
+                this.getDSBillDetail(this.bill.BillId);
+                this.$snotify.success('Cập nhật thành công!');
+            }).catch(res => {
+                this.loading = false;
+                this.$snotify.error('Cập nhật thất bại!');
+            });
+          } else {
+              this.loading = true;
+              this.billDetail.TotalMoney = this.billDetail.Amount * this.billDetail.Price;
+              BillDetailApi.insert(this.billDetail).then(res => {
+                  this.isUpdateChiTiet = false;
+                  this.loading = false;
+                  this.hien = true;
+                  this.bill.TotalMoney += this.billDetail.TotalMoney;
+                  this.$emit("save");
+                  this.billDetail = {} as BillDetail;
+                  this.getDSBillDetail(this.bill.BillId);
+                  this.$snotify.success('Thêm mới thành công!');
+              }).catch(res => {
+                  this.loading = false;
+                  this.$snotify.error('Bài hát đã tồn tại trong bill!');
+              });
+          }
         }
       });
     },
     getDataFromApi(id: number): void {
-      // BillApi.get(id).then(res => {
-      //     this.bill = res;
-      // });
+      BillApi.get(id).then(res => {
+          this.bill = (res as any).data;
+          this.bill.Datetime = this.$moment(this.bill.Datetime);
+          this.getDSBillDetail(this.bill.BillId);
+      });
     },
     save(): void {
       this.$validator.validateAll("frmAddEdit").then(res => {
         if (res) {
-          // if (this.isUpdate) {
-          //     this.loading = true;
-          //     BillApi.update(this.billID, this.bill).then(res => {
-          //         this.loading = false;
-          //         this.$emit("save");
-          //         this.isShow = false;
-          //         this.$snotify.success('Cập nhật thành công!');
-          //     }).catch(res => {
-          //         this.loading = false;
-          //         this.$snotify.error('Cập nhật thất bại!');
-          //     });
-          // } else {
-          //     this.loading = true;
-          //     BillApi.insert(this.bill).then(res => {
-          //         this.bill = res;
-          //         this.isShow = false;
-          //         this.$emit("save");
-          //         this.loading = false;
-          //         this.$snotify.success('Thêm mới thành công!');
-          //     }).catch(res => {
-          //         this.loading = false;
-          //         this.$snotify.error('Thêm mới thất bại!');
-          //     });
-          // }
+          if (this.isUpdate) {
+            this.loading = true;
+            BillApi.update(this.billID, this.bill).then(res => {
+                this.loading = false;
+                this.$emit("save");
+                this.isShow = false;
+                this.$snotify.success('Cập nhật thành công!');
+            }).catch(res => {
+                this.loading = false;
+                this.$snotify.error('Cập nhật thất bại!');
+            });
+          } else {
+              this.loading = true;
+              BillApi.insert(this.bill).then(res => {
+                  this.hien = true;
+                  this.bill.BillId = (res as any).BillId;
+                  this.$emit("save");
+                  this.loading = false;
+                  this.$snotify.success('Thêm mới thành công!');
+              }).catch(res => {
+                  this.loading = false;
+                  this.$snotify.error('Thêm mới thất bại!');
+              });
+          }
         }
       });
-    }
+    },
+    confirmDelete(item: BillDetail): void {
+      BillDetailApi.delete(item.BillDetailId).then(res => {
+        this.getDSBillDetail(this.bill.BillId)
+      })
+    },
   }
 });
 </script>
