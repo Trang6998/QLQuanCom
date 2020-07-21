@@ -36,42 +36,39 @@
               <v-col cols="12" class="py-0 px-1">
                 <v-text-field
                   v-model="bill.Description"
-                  label="Ghi chú" hide-details
+                  label="Ghi chú"
                   :error-messages="errors.collect('Ghi chú', 'frmAddEdit')"
                   v-validate="''"
                   data-vv-scope="frmAddEdit"
                   data-vv-name="Ghi chú"
                 ></v-text-field>
               </v-col>
+              <v-col cols="3" class="px-1 py-0">
+                <v-autocomplete
+                  v-model="bill.Weather"
+                  :items="dsWeather"  hide-details
+                  item-text="weatherName"
+                  item-value="weatherID"
+                  label="Thời tiết" 
+                  @change="getNumberProduct()"
+                ></v-autocomplete>
+              </v-col>
+              <v-col cols="3" class="px-1 py-0">
+                <v-text-field
+                  v-model.number="bill.Temperature"
+                  label="Nhiệt độ"  hide-details
+                  type="number"
+                  :error-messages="errors.collect('Nhiệt độ', 'formBillDetail')"
+                  v-validate="'required|numeric'"
+                  data-vv-scope="formBillDetail"
+                  data-vv-name="Nhiệt độ"
+                  @input="getNumberProduct()"
+                ></v-text-field>
+              </v-col>
             </v-row>
             <v-row v-show="hien">
-              <v-col cols="6" class="py-0 px-1 pt-7 pb-3">
-                              <h3>Danh sách sản phẩm</h3>
-              </v-col>
-
               <v-col cols="6" class="py-0 px-1 pt-5 pb-3">
-                                <v-spacer></v-spacer>
-
-                <v-btn
-                  color="orange lighten-2"
-                  style="float: right"
-                  fab
-                  dark
-                  small
-                  @click="reload()"
-                >
-                  <v-icon small class="px-0">autorenew</v-icon>
-                </v-btn>
-                <v-btn
-                  color="orange lighten-2"
-                  style="float: right; margin-right: 5px"
-                  fab
-                  dark
-                  small
-                  @click="saveBillBillDetail()"
-                >
-                  <v-icon small class="px-0">{{isUpdateChiTiet == false ? 'add' :'save'}}</v-icon>
-                </v-btn>
+                              <h3>Danh sách sản phẩm</h3>
               </v-col>
             </v-row>
             <v-row v-show="hien">
@@ -86,6 +83,7 @@
                   v-validate="'required'"
                   data-vv-scope="formBillDetail"
                   data-vv-name="Chọn sản phẩm"
+                  @change="getNumberProduct()"
                 ></v-autocomplete>
               </v-col>
               <v-col cols="2" class="px-1 py-0">
@@ -110,25 +108,29 @@
                   data-vv-name="Đơn giá"
                 ></v-text-field>
               </v-col>
-              <v-col cols="2" class="px-1 py-0">
-                <v-autocomplete
-                  v-model="billDetail.BillId"
-                  :items="dsWeather"
-                  item-text="WeatherName"
-                  item-value="WeatherId"
-                  label="Thời tiết" 
-                ></v-autocomplete>
-              </v-col>
-              <v-col cols="2" class="px-1 py-0">
-                <v-text-field
-                  v-model.number="billDetail.Price"
-                  label="Nhiệt độ"
-                  type="number"
-                  :error-messages="errors.collect('Nhiệt độ', 'formBillDetail')"
-                  v-validate="'required|numeric'"
-                  data-vv-scope="formBillDetail"
-                  data-vv-name="Nhiệt độ"
-                ></v-text-field>
+              <v-col cols="4" class="py-0 px-1 pt-5 pb-3">
+                                <v-spacer></v-spacer>
+
+                <v-btn
+                  color="orange lighten-2"
+                  style="float: right"
+                  fab
+                  dark
+                  small
+                  @click="reload()"
+                >
+                  <v-icon small class="px-0">autorenew</v-icon>
+                </v-btn>
+                <v-btn
+                  color="orange lighten-2"
+                  style="float: right; margin-right: 5px"
+                  fab
+                  dark
+                  small
+                  @click="saveBillBillDetail()"
+                >
+                  <v-icon small class="px-0">{{isUpdateChiTiet == false ? 'add' :'save'}}</v-icon>
+                </v-btn>
               </v-col>
             </v-row>
             <v-row>
@@ -196,7 +198,8 @@ export default Vue.extend({
       valid: false,
       isShow: false,
       isUpdate: false,
-      bill: {} as Bill,
+      bill: {
+      } as Bill,
       loading: false,
       loadingSave: false,
       active: [] as any[],
@@ -204,7 +207,8 @@ export default Vue.extend({
       isUpdateChiTiet: false,
       dialogConfirmDelete: false,
       hien: false,
-      billDetail: {} as BillDetail,
+      billDetail: {
+      } as BillDetail,
       dsBillDetail: [] as BillDetail[],
       loadingbtn: false,
       tableHeader: [
@@ -221,20 +225,29 @@ export default Vue.extend({
       ],
       dsProduct: [] as Product[],
       dsWeather: [
-        { WeatherId: 1, WeatherName: 'Nắng' },
-        { WeatherId: 2, WeatherName: 'Mưa' },
-        { WeatherId: 3, WeatherName: 'Bão' },
-        { WeatherId: 4, WeatherName: 'Mây' },
+        { weatherID: 2, weatherName: 'Thunderstorm' },
+        { weatherID: 3, weatherName: 'Drizzle' },
+        { weatherID: 5, weatherName: 'Rain' },
+        { weatherID: 6, weatherName: 'Snow' },
+        { weatherID: 7, weatherName: 'Mist' },
+        { weatherID: 8, weatherName: 'Clouds' },
       ]
     };
   },
   watch: {},
-  created() {},
+  created() {
+    
+  },
   methods: {
     hide() {
       this.isShow = false;
     },
     show(isUpdate: boolean, item: any) {
+      this.bill = {
+        Weather: this.$store.state.dayWeather.weatherID,
+        Temperature: parseInt(this.$store.state.dayWeather.temp)
+    } as Bill
+    
       this.$validator.errors.clear();
       this.$validator.reset();
       this.loadingSave = false;
@@ -249,7 +262,11 @@ export default Vue.extend({
         this.getDataFromApi(this.billID);
       } else {
         this.hien = false;
-        this.bill = {TotalMoney: 0, Type : 0, Datetime: this.$moment()} as Bill;
+        this.bill = { 
+          Weather: this.$store.state.dayWeather.weatherID,
+          Temperature: parseInt(this.$store.state.dayWeather.temp),
+          TotalMoney: 0, Type : 0, Datetime: this.$moment()
+        } as Bill;
       }
     },
     getDSProduct() {
@@ -287,6 +304,7 @@ export default Vue.extend({
                 this.$emit("save");
                 this.billDetail = {} as BillDetail;
                 this.getDSBillDetail(this.bill.BillId);
+                this.caculatorTotalMoney();
                 this.$snotify.success('Cập nhật thành công!');
             }).catch(res => {
                 this.loading = false;
@@ -303,6 +321,7 @@ export default Vue.extend({
                   this.$emit("save");
                   this.billDetail = {} as BillDetail;
                   this.getDSBillDetail(this.bill.BillId);
+                  this.caculatorTotalMoney();
                   this.$snotify.success('Thêm mới thành công!');
               }).catch(res => {
                   this.loading = false;
@@ -354,6 +373,17 @@ export default Vue.extend({
         this.getDSBillDetail(this.bill.BillId)
       })
     },
+    getNumberProduct(){
+      BillDetailApi.getNumberProduct(this.bill.Weather, this.bill.Temperature, this.billDetail.ProductId).then(res => {
+        this.billDetail.Amount = (res as any).data
+      });
+    },
+    caculatorTotalMoney() {
+      this.bill.TotalMoney = 0;
+      for (let i=0; i< this.dsBillDetail.length; i++){
+        this.bill.TotalMoney += this.dsBillDetail[i].Amount * this.dsBillDetail[i].Price;
+      }
+    }
   }
 });
 </script>

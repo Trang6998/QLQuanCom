@@ -3,7 +3,7 @@
     <v-layout row wrap class="ma-3 ml-4 mr-5">
         <h3 style="padding: 20px 10px 0px 0px">Thống kê số liệu trong ngày:</h3>
       <v-flex xs3 style="margin-top: -16px">
-        <v-datepicker v-model="searchParamsThongKeNgay.ngay" @input="thongKeNgay()" hide-details></v-datepicker>
+        <v-datepicker v-model="searchParamsStatisticNgay.Datetime" @input="StatisticNgay()" hide-details></v-datepicker>
       </v-flex>
       
       </v-layout>
@@ -12,27 +12,27 @@
       <v-flex xs4>
         <v-card style="width: 100%; background-color: #4db6ac" class="pa-3">
           <h2 style="text-align: center; color: white">Số mua vào</h2>
-          <h2 style="text-align: center; color: white">{{thongTinThongKeTrongNgay.soMua}}</h2>
+          <h2 style="text-align: center; color: white">{{thongTinStatisticTrongNgay.soMua}}</h2>
           <h3 style="text-align: center; color: white">
-            <i>({{thongTinThongKeTrongNgay.soMuaTang >= 0 ? 'Tăng ' + thongTinThongKeTrongNgay.soMuaTang : 'Giảm ' + Math.abs(thongTinThongKeTrongNgay.soMuaTang)}} sản phẩm so với hôm qua)</i>
+            <i>({{thongTinStatisticTrongNgay.soMuaTang >= 0 ? 'Tăng ' + thongTinStatisticTrongNgay.soMuaTang : 'Giảm ' + Math.abs(thongTinStatisticTrongNgay.soMuaTang)}} sản phẩm so với hôm qua)</i>
           </h3>
         </v-card>
       </v-flex>
       <v-flex xs4>
         <v-card style="width: 100%; background-color: #4db6ac" class="pa-3">
           <h2 style="text-align: center; color: white">Số bán ra</h2>
-          <h2 style="text-align: center; color: white">{{thongTinThongKeTrongNgay.soBan}}</h2>
+          <h2 style="text-align: center; color: white">{{thongTinStatisticTrongNgay.soBan}}</h2>
           <h3 style="text-align: center; color: white">
-            <i>({{thongTinThongKeTrongNgay.soBanTang >= 0 ? 'Tăng ' + thongTinThongKeTrongNgay.soBanTang : 'Giảm ' + Math.abs(thongTinThongKeTrongNgay.soBanTang)}} sản phẩm so với hôm qua)</i>
+            <i>({{thongTinStatisticTrongNgay.soBanTang >= 0 ? 'Tăng ' + thongTinStatisticTrongNgay.soBanTang : 'Giảm ' + Math.abs(thongTinStatisticTrongNgay.soBanTang)}} sản phẩm so với hôm qua)</i>
           </h3>
         </v-card>
       </v-flex>
       <v-flex xs4>
         <v-card style="width: 100%; background-color: #4db6ac" class="pa-3">
           <h2 style="text-align: center; color: white">Doanh thu</h2>
-          <h2 style="text-align: center; color: white">{{thongTinThongKeTrongNgay.doanhThu}}</h2>
+          <h2 style="text-align: center; color: white">{{thongTinStatisticTrongNgay.doanhThu}}</h2>
           <h3 style="text-align: center; color: white">
-            <i>(Tăng {{thongTinThongKeTrongNgay.doanhThuTang}}% so với hôm qua)</i>
+            <i>({{thongTinStatisticTrongNgay.doanhThuTang >= 0? 'Tăng ' + thongTinStatisticTrongNgay.doanhThuTang : 'Giảm ' + thongTinStatisticTrongNgay.doanhThuTang}}% so với hôm qua)</i>
           </h3>
         </v-card>
       </v-flex>   
@@ -41,9 +41,9 @@
       <h3 style="padding: 20px 10px 0px 0px;">Thống kê số liệu trong tháng:</h3>
       <v-flex xs3 style="margin-top: -16px">
         <v-autocomplete
-          v-model="searchParamsThongKeTuan.thang"
+          v-model="searchParamsStatisticTuan.month"
           :items="dsThang"
-          @change="thongKeTuan()"
+          @change="StatisticTuan()"
           hide-details
           label="Chọn tháng"
           class="mr-1 ml-1"
@@ -54,9 +54,9 @@
       </v-flex>
       <v-flex xs3 style="margin-top: -16px">
         <v-autocomplete
-          v-model="searchParamsThongKeTuan.nam"
+          v-model="searchParamsStatisticTuan.year"
           :items="dsNam"
-          @change="thongKeTuan()"
+          @change="StatisticTuan()"
           label="Chọn năm"
           class="mr-1 ml-1"
         >
@@ -76,14 +76,11 @@
 
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
-// import ThongKeApi, { ThongKeTuanApiSearchParams , ThongKeNgayApiSearchParams } from '@/apiResources/ThongKeApi';
+import StatisticApi, { StatisticByDayApiSearchParams, StatisticByMonthApiSearchParams } from '@/apiResources/StatisticApi';
 import { debug } from "util";
 export default Vue.extend({
   data() {
     return {
-      // chartData: [
-      //     ['Week', 'Doanh thu (100.000 VND)', 'Số đơn'],
-      // ],
       chartData: [
         ["Year", "Revenues"],
         ["1", 1000],
@@ -126,14 +123,16 @@ export default Vue.extend({
           subtitle: "Sales, Expenses, and Profit: 2014-2017"
         }
       },
-      dsTuan: [1, 2, 3, 4, 5],
       dsThang: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
       dsNam: [] as any,
-      searchParamsThongKeTuan: {} as any,
-      searchParamsThongKeNgay: {
-        ngay: this.$moment().format("YYYY/MM/DD")
-      } as any,
-      thongTinThongKeTrongNgay: {
+      searchParamsStatisticTuan: {
+        month: this.$moment().month()+1,
+        year: this.$moment().year()
+      } as StatisticByMonthApiSearchParams,
+      searchParamsStatisticNgay: {
+        Datetime: this.$moment().format('YYYY-MM-DD')
+      } as StatisticByDayApiSearchParams,
+      thongTinStatisticTrongNgay: {
         soMua: 0,
         soBan: 0,
         doanhThu: 0,
@@ -151,42 +150,23 @@ export default Vue.extend({
     var currentYear = this.$moment().year();
     for (let i = -10; i <= 10; i++) {
       this.dsNam.push(parseInt(currentYear) + i);
-    }
-    this.searchParamsThongKeNgay.coSoID = this.coSoID;
-    this.searchParamsThongKeTuan.coSoID = this.coSoID;
-    this.searchParamsThongKeTuan.tuan =
-      this.$moment().week() -
-      this.$moment()
-        .startOf("month")
-        .week() +
-      1;
-    this.searchParamsThongKeTuan.thang = this.$moment().month() + 1;
-    this.searchParamsThongKeTuan.nam = currentYear;
-    this.thongKeTuan();
-    this.thongKeNgay();
+    } 
+    this.StatisticTuan();
+    this.StatisticNgay();
   },
-  methods: {
-    thayDoiCoSo() {
-      this.searchParamsThongKeTuan.coSoID = this.searchParamsThongKeNgay.coSoID;
-
-      this.thongKeNgay();
-      this.thongKeTuan();
+  methods: { 
+    StatisticTuan() {
+      this.chartData = [
+          ['Month', 'Revenue'],
+      ];
+      StatisticApi.getbymonth(this.searchParamsStatisticTuan).then(res => {
+          this.chartData.push(...(res as any).data)
+      });
     },
-    thongKeTuan() {
-      // this.chartData = [
-      //     ['Week', 'Doanh thu (100.000 VND)', 'Số đơn'],
-      // ]
-      // ThongKeApi.thongKeTuan(this.searchParamsThongKeTuan).then(res => {
-      //     for (let i = 0; i < res.length; i++) {
-      //         var item = [res[i].GiaTri1, res[i].GiaTri2, res[i].GiaTri3];
-      //         this.chartData.push(item)
-      //     }
-      // })
-    },
-    thongKeNgay() {
-      // ThongKeApi.thongKeNgay(this.searchParamsThongKeNgay).then(res => {
-      //     this.thongTinThongKeTrongNgay = res
-      // })
+    StatisticNgay() {
+      StatisticApi.getbyday(this.searchParamsStatisticNgay).then(res => {
+          this.thongTinStatisticTrongNgay = (res as any).data
+      })
     }
   }
 });

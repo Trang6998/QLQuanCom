@@ -54,5 +54,21 @@ class BillDetailApi extends BaseApi {
                 })
         });
     }
+    getNumberProduct(weather: number, temperature: number, productId: number): Promise<any> {
+        return new Promise<any>((resolve: any, reject: any) => {
+            HTTP.get(`api/v1/bill_detail/generate_amount`,{
+                params: {
+                    Weather: weather,
+                    Temperature: temperature,
+                    ProductId: productId
+                }
+            })
+                .then((response) => {
+                    resolve(response.data);
+                }).catch((error) => {
+                    reject(error);
+                })
+        });
+    }
 }
 export default new  BillDetailApi();

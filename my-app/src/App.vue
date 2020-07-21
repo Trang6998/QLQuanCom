@@ -11,8 +11,8 @@
             <v-toolbar-title v-text="title"></v-toolbar-title>
             <v-spacer></v-spacer>
             <div style="display: contents">
-                <img src="../public/static/img/sunny.svg" style="width: 50px"/>
-                <h3>31°C</h3>
+                <img :src="`http://openweathermap.org/img/w/${iconID}.png`" style="width: 50px"/>
+                <h3>{{temp}}°C</h3>
             </div>
             <v-menu offset-y>
                 <template v-slot:activator="{ on }">
@@ -56,6 +56,8 @@
     import { Vue } from 'vue-property-decorator';
     import auth from '@/auth';
     import LeftSideBar from '@/components/Layout/LeftSideBar.vue';
+import { HTTP } from "./HTTPServices";
+import Axios from "axios";
 
     export default Vue.extend({
         name: 'App',
@@ -69,7 +71,10 @@
                 right: true,
                 rightDrawer: false,
                 title: '',
-                user: this.$store.state.user.Profile
+                user: this.$store.state.user.Profile,
+                temp:0,
+                iconID: 0,
+                weatherID: 0
             };
         },
         computed: {
@@ -83,6 +88,22 @@
         },
         mounted() {
         },
+        created() {
+            this.getWeather().then(res => {
+                let app = this.$store.state.app;
+
+                this.temp = Math.ceil((res as any).main.temp - 273); 
+                this.iconID = (res as any).weather[0].icon
+                this.weatherID = Math.floor((res as any).weather[0].id/100)
+                this.$store.state.dayWeather = {
+                    temp: this.temp,
+                    weatherID: this.weatherID,
+                    weatherName: (res as any).weather[0].main,
+                    iconID: this.iconID
+                }
+                this.$store.commit('UPDATE_APP', app);
+            })
+        },
         methods: {
             checkRole(roleId: number): boolean {
                 return this.$store.state.user.Profile.UserRole.indexOf(roleId) !== -1;
@@ -94,6 +115,17 @@
                 let app = this.$store.state.app;
                 app.drawer = !this.$store.state.app.drawer;
                 this.$store.commit('UPDATE_APP', app);
+            },
+            getWeather() {
+                var me = this;
+                return new Promise<any>((resolve: any, reject: any) => {
+                    Axios.get(`http://api.openweathermap.org/data/2.5/weather?id=1857357&appid=732c6a969114061587ceee6d7d597189`)
+                    .then((response) => {
+                        resolve(response.data);
+                    }).catch((error) => {
+                        reject(error);
+                    })
+                });
             }
         }
     });

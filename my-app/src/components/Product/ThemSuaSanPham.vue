@@ -14,7 +14,7 @@
             <v-col cols="4">
               <v-img :src="product.Thumbnail" style="padding-top: 20px"></v-img>
             </v-col>
-            <v-col cols="8">
+            <v-col cols="5">
               <v-text-field
                 v-model="product.ProductName"
                 label="Tên sản phẩm *"
@@ -26,6 +26,19 @@
                 data-vv-name="Tên sản phẩm"
                 clearable
               ></v-text-field>
+            </v-col>
+            <v-col cols="3">
+              <v-select
+                v-model="product.ModelID"
+                label="Loại sản phẩm"
+                :items="lstModel"
+                :error-messages="errors.collect('Loại sản phẩm', 'frmAddEdit')"
+                v-validate="'required'"
+                class="mr-1"
+                data-vv-scope="frmAddEdit"
+                data-vv-name="Loại sản phẩm"
+                clearable
+              ></v-select>
             </v-col>
           </v-row>
         </v-form>
@@ -59,7 +72,8 @@ export default Vue.extend({
       loadingSave: false,
       active: [] as any[],
       open: [],
-      productID: 0
+      productID: 0,
+      lstModel: [1,2,3,4,5,6,7,8,9,10]
     };
   },
   watch: {},

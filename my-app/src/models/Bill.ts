@@ -3,4 +3,6 @@
     Type: number;
     Datetime: Date;
     TotalMoney: number;
+    Weather: number;
+    Temperature: number;
 }

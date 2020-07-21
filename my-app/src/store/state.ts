@@ -11,7 +11,12 @@ let syncedData = {
         rightDrawer: false,
         title: 'Title'
     },
-    dayspanState: {},
+    dayWeather: {
+        temp: null,
+        weatherID: null,
+        weatherName: null,
+        iconID: null
+    },
     user: {
         AccessToken: {
             IsAuthenticated: false,
